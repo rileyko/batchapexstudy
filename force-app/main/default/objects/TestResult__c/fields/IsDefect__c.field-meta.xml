@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IsDefect__c</fullName>
+    <externalId>false</externalId>
+    <formula>AND(ISPICKVAL(TestResult__c, &quot;Fail&quot;), ISPICKVAL(DefectType__c, &apos;Defect&apos;))</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Is Defect?</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

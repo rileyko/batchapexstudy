@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CaseDone__c</fullName>
+    <externalId>false</externalId>
+    <label>Case Done</label>
+    <summaryFilterItems>
+        <field>TestCase__c.CaseStatus__c</field>
+        <operation>equals</operation>
+        <value>Complete</value>
+    </summaryFilterItems>
+    <summaryForeignKey>TestCase__c.TestScenario__c</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>
