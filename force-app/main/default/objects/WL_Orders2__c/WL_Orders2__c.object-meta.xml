@@ -171,7 +171,7 @@
         <searchResultsAdditionalFields xsi:nil="true"></searchResultsAdditionalFields>
         <searchResultsAdditionalFields xsi:nil="true"></searchResultsAdditionalFields>
         <searchResultsAdditionalFields xsi:nil="true"></searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>Product_ID__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields xsi:nil="true"></searchResultsAdditionalFields>
     </searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
