@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Profit__c</fullName>
+    <externalId>false</externalId>
+    <label>Total Profit</label>
+    <summarizedField>OrderProduct_Soojung__c.Profit__c</summarizedField>
+    <summaryForeignKey>OrderProduct_Soojung__c.Order_Soojung__c</summaryForeignKey>
+    <summaryOperation>sum</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

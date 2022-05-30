@@ -9,7 +9,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         return Database.getQueryLocator(query);
     }
      
-    global void execute(Database.BatchableContext context, List<WL_Order__c> orderList) {
+    global void execute(Database.BatchableContext context, List<WL_Orders2__c> orderList) {
         //1. (Data 파싱 (날짜 정보 -> Date, 가격정보 -> Number))
         //2. for Loop 통해 OrderID, OrderDate, CustomerID, SalesPersonID 같은지 확인
             // Order에서 OrderID, OrderDate, CustomerID, SalesPersonID 가 동일한 경우, 같은 Order로 취급 --> 어디서 비교할 수 있음?
@@ -17,14 +17,14 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         // Date : OrderDate, ShipDate
         // Product, 가격 정보들, SalesPerson 정보 업데이트
         //4. 없으면 Insert
-        for(WL_Order__c ord : orderList) {        
+        for(WL_Orders2__c ord : orderList) {        
             // 배송 & 주문 날짜 Update 
             // 배송일 = (오늘 - 주문일) + 배송일
-            ord.Ship_Date__c = ord.Ship_Date__c.replace('/','-');
-            ord.Order_Date__c = ord.Order_Date__c.replace('/','-');
+            // ord.Ship_Date__c = ord.Ship_Date__c.replace('/','-');
+            // ord.Order_Date__c = ord.Order_Date__c.replace('/','-');
             // ord.Ship_Date__c = (System.today() - Date.valueOf(ord.Order_Date__c) + Date.valueOf(ord.Ship_Date__c)).format('yyyy/MM/dd');
-            ord.Order_Date__c = System.now().format('yyyy/MM/dd');
-            // 이외 사항들 어케비교해요?
+            // ord.Order_Date__c = System.now().format('yyyy/MM/dd');
+            // 이외 사항들 어케비교? 즉, 원래 있던 레코드와 새로운 레코드를 비교해야되는데, 새로운 레코드의 Variable 지정 어떻게해요?
             //ord.Product_ID__c = ????
         try {
             // DML - Update Order

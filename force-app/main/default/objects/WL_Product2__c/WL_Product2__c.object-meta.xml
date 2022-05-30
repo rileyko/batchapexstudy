@@ -143,6 +143,7 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>Custom_Compact_Layout</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
+    <description>Product용 Custom Object</description>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>true</enableFeeds>
@@ -155,9 +156,10 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>WL_Product2</label>
     <nameField>
+        <displayFormat>PR-{000000}</displayFormat>
         <label>WL_Product2</label>
         <trackFeedHistory>false</trackFeedHistory>
-        <type>Text</type>
+        <type>AutoNumber</type>
     </nameField>
     <pluralLabel>WL_Product2s</pluralLabel>
     <searchLayouts></searchLayouts>

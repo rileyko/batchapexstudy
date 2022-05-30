@@ -141,11 +141,11 @@
         <type>Default</type>
     </actionOverrides>
     <allowInChatterGroups>false</allowInChatterGroups>
-    <compactLayoutAssignment>Custom_Compact_Layout</compactLayoutAssignment>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
-    <enableFeeds>true</enableFeeds>
+    <enableFeeds>false</enableFeeds>
     <enableHistory>false</enableHistory>
     <enableLicensing>false</enableLicensing>
     <enableReports>true</enableReports>
@@ -155,9 +155,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>HmK_Return</label>
     <nameField>
-        <label>HmK_Return</label>
-        <trackFeedHistory>false</trackFeedHistory>
-        <type>Text</type>
+        <displayFormat>R-{0}</displayFormat>
+        <label>Return ID</label>
+        <type>AutoNumber</type>
     </nameField>
     <pluralLabel>HmK_Returns</pluralLabel>
     <searchLayouts></searchLayouts>

@@ -3,9 +3,8 @@
     <fullName>City__c</fullName>
     <externalId>false</externalId>
     <label>City</label>
-    <length>255</length>
+    <length>20</length>
     <required>false</required>
-    <trackFeedHistory>false</trackFeedHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>false</unique>
