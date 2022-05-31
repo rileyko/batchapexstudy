@@ -155,7 +155,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>HmK_Order</label>
     <nameField>
-        <label>Order ID</label>
+        <label>Order Name</label>
         <type>Text</type>
     </nameField>
     <pluralLabel>HmK_Orders</pluralLabel>

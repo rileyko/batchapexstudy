@@ -155,7 +155,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Order_Soojung</label>
     <nameField>
-        <label>Order Name</label>
+        <label>Name</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
