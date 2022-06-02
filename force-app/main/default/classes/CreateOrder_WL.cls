@@ -10,7 +10,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
     }
      
     global void execute(Database.BatchableContext context, List<더미> dummyOrderList) {
-        Schema.SObjectField externalIdContact = WL_Contact__c.Fields.CustomerID__c;
+        Schema.SObjectField externalIdContact = WL_Contact__c.Fields.CustomerID__c; //External Key
 
         Map<String, WL_Order__c> orderMap = new Map<String, WL_Order__c>();
         Map<String, WL_Order__c> newOrderMap = new Map<String, WL_Order__c>();
