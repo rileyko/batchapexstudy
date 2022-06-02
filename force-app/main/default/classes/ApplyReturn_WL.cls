@@ -2,9 +2,7 @@ global class ApplyReturn_WL implements Database.Batchable<sObject> {
     global Database.QueryLocator start(Database.BatchableContext context) {
         // Return Dummy에서 BatchFlag가 N인 Order Id 끌고옴
         String query = 
-        'SELECT Id, Order_ID__c' + 
-        'FROM WL_Dummy_Return__c' + 
-        'WHERE BatchFlag__c = "N"';
+        'SELECT Id, Order_ID__c' + ' FROM WL_Dummy_Return__c' + ' WHERE BatchFlag__c =: "N"';
         return Database.getQueryLocator(query);
     }
      

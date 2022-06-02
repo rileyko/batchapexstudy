@@ -298,6 +298,6 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
     global void finish(Database.BatchableContext context) {
         // ApplyReturn으로 배치체인
         ApplyReturn_WL ret = new ApplyReturn_WL();
-        Database.executeBatch(ret);
+        Database.executeBatch(ret, 200);
     }
 }
