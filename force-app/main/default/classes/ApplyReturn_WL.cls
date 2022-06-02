@@ -37,21 +37,18 @@ global class ApplyReturn_WL implements Database.Batchable<sObject> {
                 if(orgOrderMap.get(orderIdItem).Order_ID__c == orderMap.get(orderIdItem).Order_ID__c) {
                     orgOrderMap.get(orderIdItem).IsReturned__c = Boolean.valueOf('true');
                     orgOrderMap.get(orderIdItem).SalesPrice__c = 0;
-                }else {
-                    continue;
                 }
             }
         }
         try {
-            // Upsert 과정 (Order -> Return Dummy)
-            Database.upsert(orgOrderMap.values(), true); // order obj
-            Database.upsert(dummyReturnMap.values(), true); // dummy obj
+            // Update 과정 (Order -> Return Dummy)
+            Database.update(orgOrderMap.values(), true); // order obj
+            Database.update(dummyReturnMap.values(), true); // dummy obj
         } catch (Exception e) {
             System.debug(e);
         } 
 }
 
     global void finish(Database.BatchableContext context) {
-        // execute any post-processing operations like sending email
     }
 }
