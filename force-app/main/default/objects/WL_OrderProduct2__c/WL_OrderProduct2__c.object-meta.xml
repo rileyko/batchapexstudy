@@ -156,11 +156,10 @@
     <externalSharingModel>ControlledByParent</externalSharingModel>
     <label>WL_OrderProduct2</label>
     <nameField>
-        <displayFormat>OP-{000000}</displayFormat>
         <label>Order Product</label>
         <trackFeedHistory>false</trackFeedHistory>
         <trackHistory>false</trackHistory>
-        <type>AutoNumber</type>
+        <type>Text</type>
     </nameField>
     <pluralLabel>WL_OrderProduct2s</pluralLabel>
     <searchLayouts></searchLayouts>
