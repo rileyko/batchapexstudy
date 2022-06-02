@@ -1,14 +1,14 @@
 global class CreateOrder_WL implements Database.Batchable<sObject> {
     global Database.QueryLocator start(Database.BatchableContext context) {
         // Order Dummy에서 BatchFlag가 N인 Order 끌고옴
-        String query = 
-        'SELECT '+
-        'Name, Order_ID__c, Order_Date__c, Ship_Date__c, Ship_Mode__c, ' +'Customer_ID__c, Customer_Name__c, Segment__c, ' + 'Region__c, RegionalManager__c, CountryRegion__c, City__c, State__c, Postal_Code__c, ' +'Product_ID__c, Product_Name__c, Category__c, Sub_Category__c, ' + 
-        'Discount__c, Sales__c, Profit__c, Quantity__c' +'FROM WL_Dummy_Order__c' +  'WHERE BatchFlag__c =: "N"';
+        String query = 'SELECT Id, Name, Order_ID__c, Order_Date__c, Ship_Date__c, Ship_Mode__c, Customer_ID__c, Customer_Name__c, Segment__c, Region__c, RegionalManager__c, CountryRegion__c, City__c, State__c, Postal_Code__c, Product_ID__c, Product_Name__c, Category__c, Sub_Category__c, Discount__c, Sales__c, Profit__c, Quantity__c' ;
+        query += ' FROM WL_Dummy_Order__c' ;
+        // query += ' WHERE BatchFlag__c = \'N\''; 
         return Database.getQueryLocator(query);
     }
      
     global void execute(Database.BatchableContext context, List<WL_Dummy_Order__c> dummyOrderList) {
+        Integer orderProductIdx = 0;
         //External Key 선언
         Schema.SObjectField externalIdContact = WL_Contact__c.Fields.Customer_ID__c; 
         Schema.SObjectField externalIdOrder = WL_Orders2__c.Fields.Order_ID__c; 
@@ -17,8 +17,6 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         Schema.SObjectField externalIdProduct = WL_Product2__c.Fields.Product_ID__c; 
         Schema.SObjectField externalIdOrderProduct = WL_OrderProduct2__c.Fields.ExternalKey__c;
     
-        
-
         // Order Map
         Map<String, WL_Orders2__c> orderMap = new Map<String, WL_Orders2__c>();
         Map<String, WL_Orders2__c> newOrderMap = new Map<String, WL_Orders2__c>();
@@ -47,8 +45,8 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         // 더미 오브젝트에 있는 내용 기반으로 각각 오브젝트 만들기
         for(WL_Dummy_Order__c dummyItem : dummyOrderList) {
             // 더미 batch flag 변경 후, Map에 저장
-            dummyItem.BatchFlag__c = 'Y';
-            dummyOrderMap.put(dummyItem.Id, dummyItem);
+            WL_Dummy_Order__c dmOrder = new WL_Dummy_Order__c(Id = dummyItem.Id, BatchFlag__c = 'Y');
+            dummyOrderMap.put(dmOrder.Id, dmOrder);
 
             // 1. create Contact obj
             // 더미에 있는 contact Id 확인하기 위해 Contact 생성 후, Map에 저장
@@ -62,7 +60,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             // 더미에 있는 Region 확인하기 위해 Store 생성 후, Map에 저장
             WL_Store__c store = new WL_Store__c();
             // Postal Code 4글자 -> 5글자 변환
-            if (dummyItem.Postal_Code__c.length() == 4) {
+            if (dummyItem.Postal_Code__c == null || dummyItem.Postal_Code__c.length() == 4) {
                 dummyItem.Postal_Code__c = '0' + dummyItem.Postal_Code__c;
             }
             store.Postal_Code__c = dummyItem.Postal_Code__c;
@@ -76,8 +74,8 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             // 더미에 있는 User 확인하기 위해 User 생성 후, Map에 저장
             WL_User__c user = new WL_User__c();
             user.Name__c = dummyItem.RegionalManager__c;
-            user.WL_Store__c = store.Id; // MD relationship
-            user.ExternalKey__c = dummyItem.RegionalManager__c + dummyItem.Region__c; //External Key
+            user.WL_Store__r = store; // MD relationship
+            user.ExternalKey__c = dummyItem.RegionalManager__c + dummyItem.Postal_Code__c; //External Key
             userMap.put(user.ExternalKey__c, user); //?
 
             // 4. create Product obj
@@ -93,7 +91,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             WL_Orders2__c orderItem = new WL_Orders2__c();
             orderItem.Order_ID__c = dummyItem.Order_ID__c;
             orderItem.Ship_Mode__c = dummyItem.Ship_Mode__c;
-            // Date Parsing +++ (11/8/21 -> 2020-11-03)
+            // Date Parsing 작업 (11/8/21 -> 2020-11-03)
                 // Split > Length Checking > String +
             List<String> orderdateSplit = dummyItem.Order_Date__c.split('/', 3);
             orderdateSplit[2] = '20' + orderdateSplit[2];
@@ -118,7 +116,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             Date shipDateDate = date.parse(shipDateStr);
             orderItem.Order_Date__c = orderDateDate;
             orderItem.Ship_Date__c = shipDateDate;
-            orderItem.WL_Contact__c = contact.Id;
+            orderItem.WL_Contact__r = new WL_Contact__c(Customer_ID__c = contact.Customer_ID__c);
             orderItem.WL_Store__c = store.Id;
             orderItem.SalesPerson__c = user.Name__c;
             orderItem.SalesPrice__c = 0;
@@ -130,8 +128,9 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             WL_OrderProduct2__c orderProduct = new WL_OrderProduct2__c();
             orderProduct.WL_Order2__c = orderItem.Id; // MD relationship
             orderProduct.WL_Product2__c = product.Id; // LK relationship
+            orderProductIdx += 1;
             // External Key (복합키)
-            orderProduct.ExternalKey__c = orderProduct.OrderProductNo__c + orderProduct.WL_Order2__c + orderProduct.WL_Product2__c;
+            orderProduct.ExternalKey__c = orderProduct.WL_Order2__c + '_' + String.valueOf(orderProductIdx) + '_' + orderProduct.WL_Product2__c ;
 
             orderProduct.Discount__c = Decimal.valueof(dummyItem.Discount__c);
             orderProduct.Sales__c = Decimal.valueof(dummyItem.Sales__c);
@@ -164,7 +163,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
 
         // Org에 존재하는 레코드 판별 - Store
         List<WL_Store__c> storeList = [SELECT City__c, Country_Region__c, Postal_Code__c, Region__c, State__c FROM WL_Store__c WHERE Postal_Code__c in : contactMap.keySet()];
-        Map<Id, WL_Store__c> orgStoreMap = new Map<Id, WL_Store__c>();
+        Map<String, WL_Store__c> orgStoreMap = new Map<String, WL_Store__c>();
         for(WL_Store__c orgStoreItem : storeList){
             orgStoreMap.put(orgStoreItem.Postal_Code__c, orgStoreItem);
         }
@@ -201,6 +200,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
                 }else {
                     WL_User__c userItem = userMap.get(userIdItem);
                     newUserMap.put(userIdItem, userItem);
+                    System.debug(newUserMap);
                 }
             }else {
                 WL_User__c userItem = userMap.get(userIdItem);
@@ -285,10 +285,11 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             // Update 과정 (Order -> Return Dummy)
             Database.upsert(newContactMap.values(), externalIdContact, true);
             Database.upsert(newStoreMap.values(), externalIdStore, true);
-            Database.upsert(newUserMap.values(), externalIdUser, true);
             Database.upsert(newProductMap.values(), externalIdProduct, true);
             Database.upsert(newOrderMap.values(), externalIdOrder, true);
-            Database.upsert(newOrderProductMap.values(), externalIdOrderProduct, true);
+            // Database.upsert(newUserMap.values(), externalIdUser, true);
+            // Database.upsert(newOrderProductMap.values(), externalIdOrderProduct, true);
+            Database.update(dummyOrderMap.values(), true); // dummy obj
         } catch (Exception e) {
             System.debug(e);
         } 
