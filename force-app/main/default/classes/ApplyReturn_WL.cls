@@ -34,7 +34,7 @@ global class ApplyReturn_WL implements Database.Batchable<sObject> {
             // WL_Orders2__c 오브젝트의 Return Flag = Yes & 가격정보 = 0 반영하기
             if(orgOrderMap.containsKey(orderIdItem)) {
                 if(orgOrderMap.get(orderIdItem).Order_ID__c == orderMap.get(orderIdItem).Order_ID__c) {
-                    orgOrderMap.get(orderIdItem).IsReturned__c = Boolean.valueOf('true');
+                    orgOrderMap.get(orderIdItem).IsReturned__c = true;
                     orgOrderMap.get(orderIdItem).SalesPrice__c = 0;
                 }
             }

@@ -3,7 +3,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         // Order Dummy에서 BatchFlag가 N인 Order 끌고옴
         String query = 'SELECT Id, Name, Order_ID__c, Order_Date__c, Ship_Date__c, Ship_Mode__c, Customer_ID__c, Customer_Name__c, Segment__c, Region__c, RegionalManager__c, CountryRegion__c, City__c, State__c, Postal_Code__c, Product_ID__c, Product_Name__c, Category__c, Sub_Category__c, Discount__c, Sales__c, Profit__c, Quantity__c' ;
         query += ' FROM WL_Dummy_Order__c' ;
-        // query += ' WHERE BatchFlag__c = \'N\''; 
+        query += ' WHERE BatchFlag__c = \'N\''; 
         return Database.getQueryLocator(query);
     }
      
@@ -18,6 +18,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         Schema.SObjectField externalIdOrderProduct = WL_OrderProduct2__c.Fields.ExternalKey__c;
     
         // Order Map
+        // newOrderMap 필요 X
         Map<String, WL_Orders2__c> orderMap = new Map<String, WL_Orders2__c>();
         Map<String, WL_Orders2__c> newOrderMap = new Map<String, WL_Orders2__c>();
         Map<String, WL_Dummy_Order__c> dummyOrderMap = new Map<String, WL_Dummy_Order__c>();
@@ -45,8 +46,8 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         // 더미 오브젝트에 있는 내용 기반으로 각각 오브젝트 만들기
         for(WL_Dummy_Order__c dummyItem : dummyOrderList) {
             // 더미 batch flag 변경 후, Map에 저장
-            WL_Dummy_Order__c dmOrder = new WL_Dummy_Order__c(Id = dummyItem.Id, BatchFlag__c = 'Y');
-            dummyOrderMap.put(dmOrder.Id, dmOrder);
+            dummyItem.BatchFlag__c = 'Y';
+            dummyOrderMap.put(dummyItem.Id, dummyItem);
 
             // 1. create Contact obj
             // 더미에 있는 contact Id 확인하기 위해 Contact 생성 후, Map에 저장
@@ -88,11 +89,12 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             productMap.put(dummyItem.Product_ID__c, product);
 
             // 5.create Order obj
-            WL_Orders2__c orderItem = new WL_Orders2__c(Order_ID__c = dummyItem.Order_ID__c);
-            // orderItem.Order_ID__c = dummyItem.Order_ID__c;
+            WL_Orders2__c orderItem = new WL_Orders2__c();
+            orderItem.Order_ID__c = dummyItem.Order_ID__c;
             orderItem.Ship_Mode__c = dummyItem.Ship_Mode__c;
             // Date Parsing 작업 (11/8/21 -> 2020-11-03)
                 // Split > Length Checking > String +
+                // 예쁘겡
             List<String> orderdateSplit = dummyItem.Order_Date__c.split('/', 3);
             orderdateSplit[2] = '20' + orderdateSplit[2];
             if (orderdateSplit[0].length() != 2) {
@@ -127,11 +129,11 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         // 6. create orderProduct obj
             // 더미에 있는 orderProduct 확인하기 위해 orderProduct 생성 후, Map에 저장
             WL_OrderProduct2__c orderProduct = new WL_OrderProduct2__c();
-            // orderProduct.WL_Order2__r = new WL_Orders2__c(Order_ID__c = dummyItem.Order_ID__c); // MD relationship 
+            orderProduct.WL_Order2__r = new WL_Orders2__c(Order_ID__c = dummyItem.Order_ID__c); // MD relationship 
             orderProduct.WL_Product2__r = new WL_Product2__c(Product_ID__c = dummyItem.Product_ID__c); // LK relationship 
             orderProductIdx += 1;
             // External Key (복합키)
-            orderProduct.ExternalKey__c = orderProduct.WL_Order2__c + '_' + String.valueOf(orderProductIdx) + '_' + orderProduct.WL_Product2__c ;
+            orderProduct.ExternalKey__c = dummyItem.Order_ID__c + '_' + String.valueOf(orderProductIdx) + '_' + dummyItem.Product_ID__c ;
 
             orderProduct.Discount__c = Decimal.valueof(dummyItem.Discount__c);
             orderProduct.Sales__c = Decimal.valueof(dummyItem.Sales__c);
@@ -141,6 +143,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             orderProductMap.put(orderProduct.ExternalKey__c, orderProduct);
         }
         // Org에 존재하는 레코드 판별 - Contact
+        // XXXXXX
         List<WL_Contact__c> contactList = [SELECT Id, Customer_ID__c, Customer_Name__c, Segment__c FROM WL_Contact__c WHERE Customer_ID__c in : contactMap.keySet()];
         Map<String, WL_Contact__c> orgContactMap = new Map<String, WL_Contact__c>();
         for(WL_Contact__c orgContactItem : contactList){
@@ -150,7 +153,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         for(String contactIdItem : contactMap.keySet()){
             if(orgContactMap.containsKey(contactIdItem)) {
                 if((orgContactMap.get(contactIdItem).Customer_Name__c == contactMap.get(contactIdItem).Customer_Name__c) 
-                && orgContactMap.get(contactIdItem).Segment__c == contactMap.get(contactIdItem).Segment__c) {
+                || orgContactMap.get(contactIdItem).Segment__c == contactMap.get(contactIdItem).Segment__c) {
                     continue;
                 }else {
                     WL_Contact__c cont = contactMap.get(contactIdItem);
@@ -172,9 +175,9 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         for(String storeIdItem : storeMap.keySet()){
             if(orgStoreMap.containsKey(storeIdItem)) {
                 if((orgStoreMap.get(storeIdItem).City__c == storeMap.get(storeIdItem).City__c) 
-                && orgStoreMap.get(storeIdItem).Country_Region__c == storeMap.get(storeIdItem).Country_Region__c
-                && orgStoreMap.get(storeIdItem).Region__c == storeMap.get(storeIdItem).Region__c
-                && orgStoreMap.get(storeIdItem).State__c == storeMap.get(storeIdItem).State__c) {
+                || orgStoreMap.get(storeIdItem).Country_Region__c == storeMap.get(storeIdItem).Country_Region__c
+                || orgStoreMap.get(storeIdItem).Region__c == storeMap.get(storeIdItem).Region__c
+                || orgStoreMap.get(storeIdItem).State__c == storeMap.get(storeIdItem).State__c) {
                     continue;
                 }else {
                     WL_Store__c st = storeMap.get(storeIdItem);
@@ -196,7 +199,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         for(String userIdItem : userMap.keySet()){
             if(orgUserMap.containsKey(userIdItem)) {
                 if(orgUserMap.get(userIdItem).WL_Store__c == userMap.get(userIdItem).WL_Store__c 
-                && orgUserMap.get(userIdItem).Name__c == userMap.get(userIdItem).Name__c) {
+                || orgUserMap.get(userIdItem).Name__c == userMap.get(userIdItem).Name__c) {
                     continue;
                 }else {
                     WL_User__c userItem = userMap.get(userIdItem);
@@ -218,8 +221,8 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         for(String prodIdItem : productMap.keySet()){
             if(orgProdMap.containsKey(prodIdItem)) {
                 if(orgProdMap.get(prodIdItem).Product_Name__c == productMap.get(prodIdItem).Product_Name__c 
-                && orgProdMap.get(prodIdItem).Category__c == productMap.get(prodIdItem).Category__c
-                && orgProdMap.get(prodIdItem).Sub_Category__c == productMap.get(prodIdItem).Sub_Category__c) {
+                || orgProdMap.get(prodIdItem).Category__c == productMap.get(prodIdItem).Category__c
+                || orgProdMap.get(prodIdItem).Sub_Category__c == productMap.get(prodIdItem).Sub_Category__c) {
                     continue;
                 }else {
                     WL_Product2__c prod = productMap.get(prodIdItem);
@@ -241,12 +244,12 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         for(String orderIdItem : orderMap.keySet()){
             if(orgOrderMap.containsKey(orderIdItem)) {
                 if(orgOrderMap.get(orderIdItem).Order_Date__c == orderMap.get(orderIdItem).Order_Date__c 
-                && orgOrderMap.get(orderIdItem).SalesPerson__c == orderMap.get(orderIdItem).SalesPerson__c
-                && orgOrderMap.get(orderIdItem).SalesPrice__c == orderMap.get(orderIdItem).SalesPrice__c
-                && orgOrderMap.get(orderIdItem).Ship_Date__c == orderMap.get(orderIdItem).Ship_Date__c
-                && orgOrderMap.get(orderIdItem).Ship_Mode__c == orderMap.get(orderIdItem).Ship_Mode__c
-                && orgOrderMap.get(orderIdItem).WL_Contact__c == orderMap.get(orderIdItem).WL_Contact__c
-                && orgOrderMap.get(orderIdItem).WL_Store__c == orderMap.get(orderIdItem).WL_Store__c
+                || orgOrderMap.get(orderIdItem).SalesPerson__c == orderMap.get(orderIdItem).SalesPerson__c
+                || orgOrderMap.get(orderIdItem).SalesPrice__c == orderMap.get(orderIdItem).SalesPrice__c
+                || orgOrderMap.get(orderIdItem).Ship_Date__c == orderMap.get(orderIdItem).Ship_Date__c
+                || orgOrderMap.get(orderIdItem).Ship_Mode__c == orderMap.get(orderIdItem).Ship_Mode__c
+                || orgOrderMap.get(orderIdItem).WL_Contact__c == orderMap.get(orderIdItem).WL_Contact__c
+                || orgOrderMap.get(orderIdItem).WL_Store__c == orderMap.get(orderIdItem).WL_Store__c
                 ) {
                     continue;
                 }
@@ -256,7 +259,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             }
         }
         // Org에 존재하는 레코드 판별 - OrderProduct
-        List<WL_OrderProduct2__c> orderProductList = [SELECT ExternalKey__c, OrderProductNo__c, Profit__c, Quantity__c, Discount__c, Sales__c, WL_Order2__c, WL_Product2__c  FROM WL_OrderProduct2__c WHERE ExternalKey__c in : orderProductMap.keySet()];
+        List<WL_OrderProduct2__c> orderProductList = [SELECT Id, ExternalKey__c, OrderProductNo__c, Profit__c, Quantity__c, Discount__c, Sales__c, WL_Order2__c, WL_Product2__c  FROM WL_OrderProduct2__c WHERE ExternalKey__c in : orderProductMap.keySet()];
         Map<String, WL_OrderProduct2__c> orgOrderProductMap = new Map<String, WL_OrderProduct2__c>();
         for(WL_OrderProduct2__c orgProdOrderItem : orderProductList){
             orgOrderProductMap.put(orgProdOrderItem.ExternalKey__c, orgProdOrderItem);
@@ -266,11 +269,11 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         for(String orderproductIdItem : orderProductMap.keySet()){
             if(orgOrderProductMap.containsKey(orderproductIdItem)) {
                 if(orgOrderProductMap.get(orderproductIdItem).Profit__c == orderProductMap.get(orderproductIdItem).Profit__c 
-                && orgOrderProductMap.get(orderproductIdItem).Quantity__c == orderProductMap.get(orderproductIdItem).Quantity__c
-                && orgOrderProductMap.get(orderproductIdItem).Sales__c == orderProductMap.get(orderproductIdItem).Sales__c
-                && orgOrderProductMap.get(orderproductIdItem).Discount__c == orderProductMap.get(orderproductIdItem).Discount__c
-                && orgOrderProductMap.get(orderproductIdItem).WL_Order2__c == orderProductMap.get(orderproductIdItem).WL_Order2__c
-                && orgOrderProductMap.get(orderproductIdItem).WL_Product2__c == orderProductMap.get(orderproductIdItem).WL_Product2__c
+                || orgOrderProductMap.get(orderproductIdItem).Quantity__c == orderProductMap.get(orderproductIdItem).Quantity__c
+                || orgOrderProductMap.get(orderproductIdItem).Sales__c == orderProductMap.get(orderproductIdItem).Sales__c
+                || orgOrderProductMap.get(orderproductIdItem).Discount__c == orderProductMap.get(orderproductIdItem).Discount__c
+                || orgOrderProductMap.get(orderproductIdItem).WL_Order2__c == orderProductMap.get(orderproductIdItem).WL_Order2__c
+                || orgOrderProductMap.get(orderproductIdItem).WL_Product2__c == orderProductMap.get(orderproductIdItem).WL_Product2__c
                 ) {
                     continue;
                 }
@@ -299,6 +302,6 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
     global void finish(Database.BatchableContext context) {
         // ApplyReturn으로 배치체인
         ApplyReturn_WL ret = new ApplyReturn_WL();
-        Database.executeBatch(ret, 200);
+        Database.executeBatch(ret, 2000);
     }
 }
