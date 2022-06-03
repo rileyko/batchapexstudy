@@ -74,9 +74,9 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             // 더미에 있는 User 확인하기 위해 User 생성 후, Map에 저장
             WL_User__c user = new WL_User__c();
             user.Name__c = dummyItem.RegionalManager__c;
-            user.WL_Store__r = store; // MD relationship
+            user.WL_Store__r = new WL_Store__c(Postal_Code__c = dummyItem.Postal_Code__c); // MD relationship
             user.ExternalKey__c = dummyItem.RegionalManager__c + dummyItem.Postal_Code__c; //External Key
-            userMap.put(user.ExternalKey__c, user); //?
+            userMap.put(user.ExternalKey__c, user); 
 
             // 4. create Product obj
             // 더미에 있는 Product 확인하기 위해 Product 생성 후, Map에 저장
@@ -88,8 +88,8 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             productMap.put(dummyItem.Product_ID__c, product);
 
             // 5.create Order obj
-            WL_Orders2__c orderItem = new WL_Orders2__c();
-            orderItem.Order_ID__c = dummyItem.Order_ID__c;
+            WL_Orders2__c orderItem = new WL_Orders2__c(Order_ID__c = dummyItem.Order_ID__c);
+            // orderItem.Order_ID__c = dummyItem.Order_ID__c;
             orderItem.Ship_Mode__c = dummyItem.Ship_Mode__c;
             // Date Parsing 작업 (11/8/21 -> 2020-11-03)
                 // Split > Length Checking > String +
@@ -116,18 +116,19 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             Date shipDateDate = date.parse(shipDateStr);
             orderItem.Order_Date__c = orderDateDate;
             orderItem.Ship_Date__c = shipDateDate;
-            orderItem.WL_Contact__r = new WL_Contact__c(Customer_ID__c = contact.Customer_ID__c);
-            orderItem.WL_Store__c = store.Id;
-            orderItem.SalesPerson__c = user.Name__c;
+            orderItem.WL_Store__r = new WL_Store__c(Postal_Code__c = dummyItem.Postal_Code__c);
+            orderItem.WL_Contact__r = new WL_Contact__c(Customer_ID__c = dummyItem.Customer_ID__c); 
+            orderItem.SalesPerson__c = user.Name__c; 
             orderItem.SalesPrice__c = 0;
+            orderItem.IsReturned__c = false;
 
             orderMap.put(dummyItem.Order_ID__c, orderItem);
         
         // 6. create orderProduct obj
             // 더미에 있는 orderProduct 확인하기 위해 orderProduct 생성 후, Map에 저장
             WL_OrderProduct2__c orderProduct = new WL_OrderProduct2__c();
-            orderProduct.WL_Order2__c = orderItem.Id; // MD relationship
-            orderProduct.WL_Product2__c = product.Id; // LK relationship
+            // orderProduct.WL_Order2__r = new WL_Orders2__c(Order_ID__c = dummyItem.Order_ID__c); // MD relationship 
+            orderProduct.WL_Product2__r = new WL_Product2__c(Product_ID__c = dummyItem.Product_ID__c); // LK relationship 
             orderProductIdx += 1;
             // External Key (복합키)
             orderProduct.ExternalKey__c = orderProduct.WL_Order2__c + '_' + String.valueOf(orderProductIdx) + '_' + orderProduct.WL_Product2__c ;
@@ -200,7 +201,6 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
                 }else {
                     WL_User__c userItem = userMap.get(userIdItem);
                     newUserMap.put(userIdItem, userItem);
-                    System.debug(newUserMap);
                 }
             }else {
                 WL_User__c userItem = userMap.get(userIdItem);
@@ -285,10 +285,10 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             // Update 과정 (Order -> Return Dummy)
             Database.upsert(newContactMap.values(), externalIdContact, true);
             Database.upsert(newStoreMap.values(), externalIdStore, true);
+            Database.upsert(newUserMap.values(), externalIdUser, true);
             Database.upsert(newProductMap.values(), externalIdProduct, true);
             Database.upsert(newOrderMap.values(), externalIdOrder, true);
-            // Database.upsert(newUserMap.values(), externalIdUser, true);
-            // Database.upsert(newOrderProductMap.values(), externalIdOrderProduct, true);
+            Database.upsert(newOrderProductMap.values(), externalIdOrderProduct, true);
             Database.update(dummyOrderMap.values(), true); // dummy obj
         } catch (Exception e) {
             System.debug(e);
