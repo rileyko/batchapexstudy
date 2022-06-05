@@ -9,6 +9,7 @@ global class ApplyReturn_WL implements Database.Batchable<sObject> {
      
     global void execute(Database.BatchableContext context, List<WL_Dummy_Return__c> dummyReturnList) {
         Map<String, WL_Orders2__c> orderMap = new Map<String, WL_Orders2__c>();
+        Map<String, WL_OrderProduct2__c> orderProductMap = new Map<String, WL_OrderProduct2__c>();
         Map<String, WL_Dummy_Return__c> dummyReturnMap = new Map<String, WL_Dummy_Return__c>();
         
         // 더미 오브젝트에 있는 내용 기반으로 Order만들기
