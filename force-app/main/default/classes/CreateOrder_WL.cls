@@ -1,9 +1,13 @@
 global class CreateOrder_WL implements Database.Batchable<sObject> {
     global Database.QueryLocator start(Database.BatchableContext context) {
         // Order Dummy에서 BatchFlag가 N인 Order 끌고옴
-        String query = 'SELECT Id, Name, Order_ID__c, Order_Date__c, Ship_Date__c, Ship_Mode__c, Customer_ID__c, Customer_Name__c, Segment__c, Region__c, RegionalManager__c, CountryRegion__c, City__c, State__c, Postal_Code__c, Product_ID__c, Product_Name__c, Category__c, Sub_Category__c, Discount__c, Sales__c, Profit__c, Quantity__c' ;
-        query += ' FROM WL_Dummy_Order__c' ;
-        query += ' WHERE BatchFlag__c = \'N\''; 
+        String query = 'SELECT Id, Name, Order_ID__c, Order_Date__c, Ship_Date__c, Ship_Mode__c,'; // Order
+        query += ' Customer_ID__c, Customer_Name__c, Segment__c,'; //Customer
+        query += ' Region__c, RegionalManager__c, CountryRegion__c, City__c, State__c, Postal_Code__c,'; //User & Region
+        query += ' Product_ID__c, Product_Name__c, Category__c, Sub_Category__c,'; // Product
+        query += ' Discount__c, Sales__c, Profit__c, Quantity__c'; // OrderProduct
+        query += ' FROM WL_Dummy_Order__c' ; //Dummy
+        query += ' WHERE BatchFlag__c = \'N\'';  //BatchFlag
         return Database.getQueryLocator(query);
     }
      
