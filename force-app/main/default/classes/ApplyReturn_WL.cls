@@ -3,7 +3,7 @@ global class ApplyReturn_WL implements Database.Batchable<sObject> {
         // Return Dummy에서 BatchFlag가 N인 Order Id 끌고옴
         String query = 
         'SELECT Id, Order_ID__c FROM WL_Dummy_Return__c';
-        // query += ' WHERE BatchFlag__c = \'N\''; 
+        query += ' WHERE BatchFlag__c = \'N\''; 
         return Database.getQueryLocator(query);
     }
      

@@ -3,7 +3,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         // Order Dummy에서 BatchFlag가 N인 Order 끌고옴
         String query = 'SELECT Id, Name, Order_ID__c, Order_Date__c, Ship_Date__c, Ship_Mode__c, Customer_ID__c, Customer_Name__c, Segment__c, Region__c, RegionalManager__c, CountryRegion__c, City__c, State__c, Postal_Code__c, Product_ID__c, Product_Name__c, Category__c, Sub_Category__c, Discount__c, Sales__c, Profit__c, Quantity__c' ;
         query += ' FROM WL_Dummy_Order__c' ;
-        // query += ' WHERE BatchFlag__c = \'N\''; 
+        query += ' WHERE BatchFlag__c = \'N\''; 
         return Database.getQueryLocator(query);
     }
      
@@ -99,7 +99,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             // External Key (복합키)
             orderProduct.ExternalKey__c = dummyItem.Order_ID__c + '_' + String.valueOf(orderProductIdx) + '_' + dummyItem.Product_ID__c ;
 
-            orderProduct.Discount__c = Decimal.valueof(dummyItem.Discount__c);
+            orderProduct.Discount__c = Decimal.valueof(dummyItem.Discount__c) * 100;
             orderProduct.Sales__c = Decimal.valueof(dummyItem.Sales__c);
             orderProduct.Quantity__c = integer.valueof(dummyItem.Quantity__c);
             orderProduct.Profit__c = Decimal.valueof(dummyItem.Profit__c);
