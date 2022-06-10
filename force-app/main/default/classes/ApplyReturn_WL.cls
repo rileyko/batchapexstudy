@@ -8,7 +8,7 @@ global class ApplyReturn_WL implements Database.Batchable<sObject> {
     }
      
     global void execute(Database.BatchableContext context, List<WL_Dummy_Return__c> dummyReturnList) {
-        // update할 order 
+        // update할 OrderId를 Set에 저장
         Set<String> orderSet = new Set<String>();
         List<WL_OrderProduct2__c> orderProductList = new List<WL_OrderProduct2__c>();
         Map<String, WL_Dummy_Return__c> dummyReturnMap = new Map<String, WL_Dummy_Return__c>();
