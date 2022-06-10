@@ -12,7 +12,9 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
     }
      
     global void execute(Database.BatchableContext context, List<WL_Dummy_Order__c> dummyOrderList) {
+        // OrderProduct External Key를 위한 Integer 선언
         Integer orderProductIdx = 0;
+
         //External Key 선언
         Schema.SObjectField externalIdContact = WL_Contact__c.Fields.Customer_ID__c; 
         Schema.SObjectField externalIdOrder = WL_Orders2__c.Fields.Order_ID__c; 
@@ -21,7 +23,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         Schema.SObjectField externalIdProduct = WL_Product2__c.Fields.Product_ID__c; 
         Schema.SObjectField externalIdOrderProduct = WL_OrderProduct2__c.Fields.ExternalKey__c;
     
-        // DML 적용할 Map 선언
+        // DML 적용할 레코드 저장용 Map 선언
         Map<String, WL_Orders2__c> orderMap = new Map<String, WL_Orders2__c>(); // Order map
         Map<String, WL_Dummy_Order__c> dummyOrderMap = new Map<String, WL_Dummy_Order__c>(); //dummy map
         Map<String, WL_Contact__c> contactMap = new Map<String, WL_Contact__c>(); // Contact Map
@@ -30,7 +32,7 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
         Map<String, WL_Product2__c> productMap = new Map<String, WL_Product2__c>(); // Product Map
         Map<String, WL_OrderProduct2__c> orderProductMap = new Map<String, WL_OrderProduct2__c>(); // OrderProductMap
 
-        // 더미 오브젝트에 있는 내용 기반으로 각각 오브젝트 만들기
+        // Dummy 내용 기반으로 각각 오브젝트 내용 채우기
         for(WL_Dummy_Order__c dummyItem : dummyOrderList) {
             // 더미 batch flag 변경 후, Map에 저장
             dummyItem.BatchFlag__c = 'Y';
@@ -79,11 +81,8 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             WL_Orders2__c orderItem = new WL_Orders2__c();
             orderItem.Order_ID__c = dummyItem.Order_ID__c;
             orderItem.Ship_Mode__c = dummyItem.Ship_Mode__c;
-            
-                // Split > Length Checking > String +
-            Date orderDateDate = dateParsing(dummyItem.Order_Date__c);
+            Date orderDateDate = dateParsing(dummyItem.Order_Date__c); // DateParsing용 Method 실행
             Date shipDateDate = dateParsing(dummyItem.Ship_Date__c);
-     
             orderItem.Order_Date__c = orderDateDate;
             orderItem.Ship_Date__c = shipDateDate;
             orderItem.WL_Store__r = new WL_Store__c(Postal_Code__c = dummyItem.Postal_Code__c);
@@ -91,7 +90,6 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             orderItem.SalesPerson__c = user.Name__c; 
             orderItem.SalesPrice__c = 0;
             orderItem.IsReturned__c = false;
-
             orderMap.put(dummyItem.Order_ID__c, orderItem);
         
         // 6. create orderProduct obj
@@ -100,17 +98,15 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             orderProduct.WL_Order2__r = new WL_Orders2__c(Order_ID__c = dummyItem.Order_ID__c); // MD relationship 
             orderProduct.WL_Product2__r = new WL_Product2__c(Product_ID__c = dummyItem.Product_ID__c); // LK relationship 
             orderProductIdx += 1;
-            // External Key (복합키)
-            orderProduct.ExternalKey__c = dummyItem.Order_ID__c + '_' + String.valueOf(orderProductIdx) + '_' + dummyItem.Product_ID__c ;
-
+            orderProduct.ExternalKey__c = dummyItem.Order_ID__c + '_' + String.valueOf(orderProductIdx) + '_' + dummyItem.Product_ID__c ; // External Key (복합키)
             orderProduct.Discount__c = Decimal.valueof(dummyItem.Discount__c) * 100;
             orderProduct.Sales__c = Decimal.valueof(dummyItem.Sales__c);
             orderProduct.Quantity__c = integer.valueof(dummyItem.Quantity__c);
             orderProduct.Profit__c = Decimal.valueof(dummyItem.Profit__c);
-
             orderProductMap.put(orderProduct.ExternalKey__c, orderProduct);
         }
 
+        // DML 실행
         try {
             Database.upsert(contactMap.values(), externalIdContact, true);
             Database.upsert(storeMap.values(), externalIdStore, true);
@@ -118,23 +114,22 @@ global class CreateOrder_WL implements Database.Batchable<sObject> {
             Database.upsert(productMap.values(), externalIdProduct, true);
             Database.upsert(orderMap.values(), externalIdOrder, true);
             Database.upsert(orderProductMap.values(), externalIdOrderProduct, true);
-            Database.update(dummyOrderMap.values(), true); // dummy obj
+            Database.update(dummyOrderMap.values(), true); // Dummy는 배치플래그만 변경하면되니까 update
         } catch (Exception e) {
             System.debug(e);
         } 
 }
 
-     
     global void finish(Database.BatchableContext context) {
-        // ApplyReturn으로 배치체인
+        // ApplyReturn으로 배치체인 실행
         ApplyReturn_WL ret = new ApplyReturn_WL();
         Database.executeBatch(ret, 2000);
     }
+
     // Date Parsing 작업 (11/8/21 -> 2020-11-03)
     private static Date dateParsing(String dummyDate) {
         List<String> dateSplit = dummyDate.split('/', 3);
-        dateSplit[2] = '20' + dateSplit[2];
-        String dateSum = dateSplit[2] + '-' + dateSplit[0] + '-' + dateSplit[1];
+        String dateSum = '20' + dateSplit[2] + '-' + dateSplit[0] + '-' + dateSplit[1];
         Date newDate = Date.valueOf(dateSum); 
         return newDate;
     }
